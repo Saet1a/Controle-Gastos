@@ -1,0 +1,21 @@
+{
+  "expo": {
+    "name": "Bolso",
+    "slug": "bolso",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "scheme": "bolso",
+    "userInterfaceStyle": "light",
+    "ios": {
+      "supportsTablet": false
+    },
+    "android": {},
+    "plugins": [
+      "expo-router",
+      "expo-status-bar"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}

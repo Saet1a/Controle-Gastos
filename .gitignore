@@ -1,0 +1,44 @@
+# Dependências
+node_modules/
+
+# Expo
+.expo/
+dist/
+web-build/
+expo-env.d.ts
+
+# Pastas nativas geradas por `expo prebuild` (Continuous Native Generation)
+/ios
+/android
+
+# Variáveis de ambiente (o .env.example é versionado)
+.env
+.env*.local
+
+# Assinatura / credenciais
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+*.orig.*
+
+# Testes
+coverage/
+
+# Logs
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+
+# Sistema / editor
+.DS_Store
+*.pem
+.vscode/
+.idea/
+
+# Metro
+.metro-health-check*
+
+# TypeScript
+*.tsbuildinfo
