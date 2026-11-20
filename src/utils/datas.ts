@@ -1,6 +1,8 @@
 import type { DataISO, MesISO } from '@/types/lancamento';
+import { isDataISOValida } from '@/utils/validacao';
 
 const MESES = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
+const DATA_BR_REGEX = /^(\d{2})\/(\d{2})\/(\d{4})$/;
 
 const pad = (n: number) => n.toString().padStart(2, '0');
 
@@ -35,4 +37,29 @@ export function deslocarMes(chave: MesISO, delta: number): MesISO {
   const [ano, mes] = chave.split('-').map(Number);
   const d = new Date(ano, mes - 1 + delta, 1);
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}` as MesISO;
+}
+
+/** "YYYY-MM-DD" -> "DD/MM/AAAA". Retorna "" se a data ISO for inválida. */
+export function formatarDataBR(dataISO: DataISO): string {
+  if (!isDataISOValida(dataISO)) return '';
+  const [ano, mes, dia] = dataISO.split('-');
+  return `${dia}/${mes}/${ano}`;
+}
+
+/** "DD/MM/AAAA" -> "YYYY-MM-DD". Retorna null se formato ou data de calendário forem inválidos. */
+export function parseDataBRParaISO(texto: string): DataISO | null {
+  const match = DATA_BR_REGEX.exec(texto.trim());
+  if (!match) return null;
+
+  const [, dia, mes, ano] = match;
+  const iso = `${ano}-${mes}-${dia}`;
+  return isDataISOValida(iso) ? iso : null;
+}
+
+/** Formata entrada numérica progressivamente para "DD/MM/AAAA". */
+export function formatarEntradaDataBR(texto: string): string {
+  const digitos = texto.replace(/\D/g, '').slice(0, 8);
+  if (digitos.length <= 2) return digitos;
+  if (digitos.length <= 4) return `${digitos.slice(0, 2)}/${digitos.slice(2)}`;
+  return `${digitos.slice(0, 2)}/${digitos.slice(2, 4)}/${digitos.slice(4)}`;
 }
