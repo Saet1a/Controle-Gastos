@@ -8,7 +8,7 @@ import {
 
 const L = (p: Partial<Lancamento> & Pick<Lancamento, 'id'>): Lancamento => ({
   descricao: '',
-  valorCentavos: 0,
+  valorCentavos: 100,
   tipo: 'despesa',
   data: '2026-11-01',
   categoriaId: 'outros',
@@ -32,6 +32,14 @@ describe('resumoDoMes', () => {
     });
   });
 
+  it('permite saldo negativo quando despesas superam receitas', () => {
+    expect(resumoDoMes(dados, '2026-10')).toEqual({
+      receitasCentavos: 0,
+      despesasCentavos: 9999,
+      saldoCentavos: -9999,
+    });
+  });
+
   it('mês vazio zera tudo', () => {
     expect(resumoDoMes(dados, '2025-01')).toEqual({
       receitasCentavos: 0,
@@ -46,6 +54,20 @@ describe('gastosPorCategoria', () => {
     expect(gastosPorCategoria(dados, '2026-11')).toEqual([
       { categoriaId: 'alimentacao', totalCentavos: 4000, percentual: 80 },
       { categoriaId: 'transporte', totalCentavos: 1000, percentual: 20 },
+    ]);
+  });
+
+  it('arredonda percentual em 1 casa decimal e desempata pela ordem das categorias', () => {
+    const empate: Lancamento[] = [
+      L({ id: 'a', valorCentavos: 1000, data: '2026-11-01', categoriaId: 'lazer' }),
+      L({ id: 'b', valorCentavos: 1000, data: '2026-11-02', categoriaId: 'alimentacao' }),
+      L({ id: 'c', valorCentavos: 1000, data: '2026-11-03', categoriaId: 'transporte' }),
+    ];
+
+    expect(gastosPorCategoria(empate, '2026-11')).toEqual([
+      { categoriaId: 'alimentacao', totalCentavos: 1000, percentual: 33.3 },
+      { categoriaId: 'transporte', totalCentavos: 1000, percentual: 33.3 },
+      { categoriaId: 'lazer', totalCentavos: 1000, percentual: 33.3 },
     ]);
   });
 
@@ -68,8 +90,15 @@ describe('filtrarLancamentos', () => {
 });
 
 describe('ordenarPorDataDesc', () => {
-  it('mais recente primeiro, sem mutar o original', () => {
+  it('mais recente primeiro e desempata por id desc no mesmo dia sem mutar original', () => {
+    const mesmoDia: Lancamento[] = [
+      L({ id: 'a-01', data: '2026-11-19' }),
+      L({ id: 'a-02', data: '2026-11-19' }),
+      L({ id: 'a-03', data: '2026-11-20' }),
+    ];
+
     expect(ordenarPorDataDesc(dados).map((l) => l.id)).toEqual(['4', '3', '2', '1', '5']);
+    expect(ordenarPorDataDesc(mesmoDia).map((l) => l.id)).toEqual(['a-03', 'a-02', 'a-01']);
     expect(dados[0].id).toBe('1');
   });
 });

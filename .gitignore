@@ -36,6 +36,7 @@ yarn-error.*
 *.pem
 .vscode/
 .idea/
+.~lock.*#
 
 # Metro
 .metro-health-check*
