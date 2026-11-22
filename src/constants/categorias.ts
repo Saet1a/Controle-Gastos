@@ -1,14 +1,62 @@
-import type { Categoria, CategoriaId } from '@/types/lancamento';
+import type { Categoria, CategoriaId, CorHex } from '@/types/lancamento';
 
 export const CATEGORIAS: readonly Categoria[] = Object.freeze([
-  Object.freeze({ id: 'alimentacao', nome: 'Alimentação', icone: 'fast-food', cor: '#F97316' }),
-  Object.freeze({ id: 'transporte', nome: 'Transporte', icone: 'bus', cor: '#3B82F6' }),
-  Object.freeze({ id: 'moradia', nome: 'Moradia', icone: 'home', cor: '#8B5CF6' }),
-  Object.freeze({ id: 'saude', nome: 'Saúde', icone: 'medkit', cor: '#EF4444' }),
-  Object.freeze({ id: 'educacao', nome: 'Educação', icone: 'school', cor: '#0EA5E9' }),
-  Object.freeze({ id: 'lazer', nome: 'Lazer', icone: 'game-controller', cor: '#EC4899' }),
-  Object.freeze({ id: 'salario', nome: 'Salário', icone: 'cash', cor: '#22C55E' }),
-  Object.freeze({ id: 'outros', nome: 'Outros', icone: 'ellipsis-horizontal', cor: '#6B7280' }),
+  Object.freeze({
+    id: 'alimentacao',
+    nome: 'Alimentação',
+    icone: 'fast-food',
+    cor: '#F97316',
+    corEscuro: '#EF9353',
+  }),
+  Object.freeze({
+    id: 'transporte',
+    nome: 'Transporte',
+    icone: 'bus',
+    cor: '#3B82F6',
+    corEscuro: '#6C9DEE',
+  }),
+  Object.freeze({
+    id: 'moradia',
+    nome: 'Moradia',
+    icone: 'home',
+    cor: '#8B5CF6',
+    corEscuro: '#A280EF',
+  }),
+  Object.freeze({
+    id: 'saude',
+    nome: 'Saúde',
+    icone: 'medkit',
+    cor: '#EF4444',
+    corEscuro: '#E87373',
+  }),
+  Object.freeze({
+    id: 'educacao',
+    nome: 'Educação',
+    icone: 'school',
+    cor: '#0EA5E9',
+    corEscuro: '#44B4E6',
+  }),
+  Object.freeze({
+    id: 'lazer',
+    nome: 'Lazer',
+    icone: 'game-controller',
+    cor: '#EC4899',
+    corEscuro: '#E677AE',
+  }),
+  Object.freeze({
+    id: 'salario',
+    nome: 'Salário',
+    icone: 'cash',
+    cor: '#22C55E',
+    corEscuro: '#4AD07B',
+  }),
+  Object.freeze({
+    id: 'outros',
+    nome: 'Outros',
+    icone: 'ellipsis-horizontal',
+    cor: '#6B7280',
+    corEscuro: '#868C98',
+  }),
 ]);
 
 export const CATEGORIA_IDS: readonly CategoriaId[] = Object.freeze(
@@ -43,4 +91,9 @@ export function isCategoriaId(valor: unknown): valor is CategoriaId {
 
 export function getCategoria(id: CategoriaId): Categoria {
   return CATEGORIAS_POR_ID[id] ?? CATEGORIAS_POR_ID.outros;
+}
+
+export function corCategoria(id: CategoriaId, escuro: boolean): CorHex {
+  const categoria = getCategoria(id);
+  return escuro ? categoria.corEscuro : categoria.cor;
 }

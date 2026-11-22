@@ -28,6 +28,7 @@ export interface Categoria {
   readonly nome: string;
   readonly icone: IconeCategoria;
   readonly cor: CorHex;
+  readonly corEscuro: CorHex;
 }
 
 export interface Lancamento {

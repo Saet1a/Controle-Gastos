@@ -29,8 +29,11 @@ Depois:
 - **Emulador:** aperte `a` (Android) ou `i` (iOS) no terminal. Ou rode direto
   `npm run android` / `npm run ios`.
 
-> Se o celular não conectar (rede da faculdade costuma bloquear), tente
-> `npx expo start --tunnel`.
+> Se o celular não conectar (rede da faculdade costuma bloquear, ou o iPhone
+> não está na mesma rede), use `npm run start:tunnel` e escaneie o QR code
+> com a câmera do iPhone. O túnel funciona mesmo em redes diferentes.
+>
+> Se o Expo Go reclamar de versão incompatível, atualize o Expo Go na App Store.
 
 Não há variáveis de ambiente necessárias. Veja [`.env.example`](.env.example).
 

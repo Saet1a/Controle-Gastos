@@ -1,6 +1,9 @@
 import { Ionicons } from '@expo/vector-icons';
+import { useMemo } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
+import type { CoresTema } from '@/theme/cores';
+import { useTema } from '@/theme/useTema';
 import type { MesISO } from '@/types/lancamento';
 import { deslocarMes, rotuloMes } from '@/utils/datas';
 
@@ -11,6 +14,9 @@ export interface SeletorMesProps {
 }
 
 export function SeletorMes({ mes, onChange, disabled = false }: SeletorMesProps) {
+  const { cores } = useTema();
+  const styles = useMemo(() => criarEstilos(cores), [cores]);
+
   return (
     <View style={styles.container}>
       <Pressable
@@ -26,7 +32,7 @@ export function SeletorMes({ mes, onChange, disabled = false }: SeletorMesProps)
           pressed && !disabled && styles.botaoPressionado,
         ]}
       >
-        <Ionicons name="chevron-back" size={20} color="#374151" />
+        <Ionicons name="chevron-back" size={20} color={cores.text} />
       </Pressable>
 
       <Text testID="seletor-mes-rotulo" style={styles.rotulo}>
@@ -46,40 +52,42 @@ export function SeletorMes({ mes, onChange, disabled = false }: SeletorMesProps)
           pressed && !disabled && styles.botaoPressionado,
         ]}
       >
-        <Ionicons name="chevron-forward" size={20} color="#374151" />
+        <Ionicons name="chevron-forward" size={20} color={cores.text} />
       </Pressable>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
-    borderRadius: 12,
-    paddingHorizontal: 8,
-    paddingVertical: 6,
-  },
-  botao: {
-    width: 40,
-    height: 40,
-    borderRadius: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  botaoPressionado: {
-    backgroundColor: '#F3F4F6',
-  },
-  botaoDesabilitado: {
-    opacity: 0.45,
-  },
-  rotulo: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#111827',
-  },
-});
+function criarEstilos(cores: CoresTema) {
+  return StyleSheet.create({
+    container: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      backgroundColor: cores.surface,
+      borderWidth: 1,
+      borderColor: cores.border,
+      borderRadius: 12,
+      paddingHorizontal: 8,
+      paddingVertical: 6,
+    },
+    botao: {
+      width: 40,
+      height: 40,
+      borderRadius: 10,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    botaoPressionado: {
+      backgroundColor: cores.surfaceAlt,
+    },
+    botaoDesabilitado: {
+      opacity: 0.45,
+    },
+    rotulo: {
+      fontSize: 16,
+      fontWeight: '700',
+      color: cores.text,
+    },
+  });
+}

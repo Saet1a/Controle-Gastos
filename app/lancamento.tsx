@@ -13,8 +13,10 @@ import {
   View,
 } from 'react-native';
 
-import { CATEGORIAS } from '@/constants/categorias';
+import { CATEGORIAS, corCategoria } from '@/constants/categorias';
 import { useLancamentos } from '@/context/LancamentosContext';
+import type { CoresTema } from '@/theme/cores';
+import { useTema } from '@/theme/useTema';
 import {
   ErroValidacaoLancamento,
   type CampoLancamento,
@@ -35,6 +37,8 @@ import { formatarCentavos, parseValorParaCentavos } from '@/utils/dinheiro';
 import { MAX_DESCRICAO_LENGTH } from '@/utils/validacao';
 
 type ModoData = 'hoje' | 'ontem' | 'outra';
+type CampoFoco = 'valor' | 'data' | 'descricao';
+type EstilosLancamento = ReturnType<typeof criarEstilos>;
 
 interface EstadoInicialFormulario {
   tipo: TipoLancamento;
@@ -88,6 +92,9 @@ interface FormularioLancamentoProps {
   lancamentoInicial?: Lancamento;
   carregando: boolean;
   erroLeitura: boolean;
+  cores: CoresTema;
+  escuro: boolean;
+  styles: EstilosLancamento;
   adicionar: (novo: NovoLancamento) => Promise<Lancamento>;
   editar: (id: string, dados: NovoLancamento) => Promise<Lancamento>;
   onCancelar: () => void;
@@ -99,6 +106,9 @@ function FormularioLancamento({
   lancamentoInicial,
   carregando,
   erroLeitura,
+  cores,
+  escuro,
+  styles,
   adicionar,
   editar,
   onCancelar,
@@ -119,6 +129,7 @@ function FormularioLancamento({
   const [salvando, setSalvando] = useState(false);
   const [errosCampo, setErrosCampo] = useState<Partial<Record<CampoLancamento, string>>>({});
   const [erroGeral, setErroGeral] = useState<string | null>(null);
+  const [campoFocado, setCampoFocado] = useState<CampoFoco | null>(null);
 
   const salvandoRef = useRef(false);
   const concluidoRef = useRef(false);
@@ -258,10 +269,10 @@ function FormularioLancamento({
               setTipo('despesa');
               limparErroCampo('tipo');
             }}
-            style={[styles.opcaoSegmentada, tipo === 'despesa' && styles.opcaoDespesaAtiva]}
+            style={[styles.opcaoSegmentada, tipo === 'despesa' && styles.opcaoSegmentadaAtiva]}
           >
             <Text
-              style={[styles.textoSegmentado, tipo === 'despesa' && styles.textoDespesaAtiva]}
+              style={[styles.textoSegmentado, tipo === 'despesa' && styles.textoSegmentadoAtivo]}
             >
               Despesa
             </Text>
@@ -274,10 +285,10 @@ function FormularioLancamento({
               setTipo('receita');
               limparErroCampo('tipo');
             }}
-            style={[styles.opcaoSegmentada, tipo === 'receita' && styles.opcaoReceitaAtiva]}
+            style={[styles.opcaoSegmentada, tipo === 'receita' && styles.opcaoSegmentadaAtiva]}
           >
             <Text
-              style={[styles.textoSegmentado, tipo === 'receita' && styles.textoReceitaAtiva]}
+              style={[styles.textoSegmentado, tipo === 'receita' && styles.textoSegmentadoAtivo]}
             >
               Receita
             </Text>
@@ -292,14 +303,24 @@ function FormularioLancamento({
 
       <View style={styles.secao}>
         <Text style={styles.rotulo}>Valor</Text>
-        <View style={[styles.caixaValor, Boolean(errosCampo.valorCentavos) && styles.bordaErro]}>
+        <View
+          style={[
+            styles.caixaValor,
+            campoFocado === 'valor' && styles.bordaFoco,
+            Boolean(errosCampo.valorCentavos) && styles.campoErro,
+          ]}
+        >
           <Text style={styles.prefixoMoeda}>R$</Text>
           <TextInput
             accessibilityLabel="Valor"
             placeholder="0,00"
-            placeholderTextColor="#9CA3AF"
+            placeholderTextColor={cores.textMuted}
+            selectionColor={cores.primary}
+            keyboardAppearance={escuro ? 'dark' : 'light'}
             keyboardType="decimal-pad"
             value={valorTexto}
+            onFocus={() => setCampoFocado('valor')}
+            onBlur={() => setCampoFocado((atual) => (atual === 'valor' ? null : atual))}
             onChangeText={(texto) => {
               setValorTexto(texto);
               limparErroCampo('valorCentavos');
@@ -320,6 +341,7 @@ function FormularioLancamento({
         <View style={styles.gradeCategorias}>
           {CATEGORIAS.map((categoria) => {
             const selecionada = categoriaId === categoria.id;
+            const corCat = corCategoria(categoria.id, escuro);
             return (
               <Pressable
                 key={categoria.id}
@@ -332,16 +354,10 @@ function FormularioLancamento({
                   setCategoriaId(categoria.id);
                   limparErroCampo('categoriaId');
                 }}
-                style={[
-                  styles.chipCategoria,
-                  selecionada && {
-                    borderColor: categoria.cor,
-                    backgroundColor: '#F8FAFC',
-                  },
-                ]}
+                style={[styles.chipCategoria, selecionada && styles.chipCategoriaAtivo]}
               >
-                <View style={[styles.bolinhaCategoria, { backgroundColor: categoria.cor }]}>
-                  <Ionicons name={categoria.icone} size={15} color="#FFFFFF" />
+                <View style={[styles.bolinhaCategoria, { backgroundColor: corCat }]}>
+                  <Ionicons name={categoria.icone} size={15} color={cores.onPrimary} />
                 </View>
                 <Text
                   style={[styles.nomeCategoria, selecionada && styles.nomeCategoriaAtiva]}
@@ -410,16 +426,24 @@ function FormularioLancamento({
           <TextInput
             accessibilityLabel="Outra data"
             placeholder="DD/MM/AAAA"
-            placeholderTextColor="#9CA3AF"
+            placeholderTextColor={cores.textMuted}
+            selectionColor={cores.primary}
+            keyboardAppearance={escuro ? 'dark' : 'light'}
             keyboardType="number-pad"
             maxLength={10}
             value={outraDataTexto}
+            onFocus={() => setCampoFocado('data')}
+            onBlur={() => setCampoFocado((atual) => (atual === 'data' ? null : atual))}
             onChangeText={(texto) => {
               setOutraDataTexto(formatarEntradaDataBR(texto));
               limparErroCampo('data');
             }}
             editable={!envioBloqueado}
-            style={[styles.inputTexto, Boolean(errosCampo.data) && styles.bordaErro]}
+            style={[
+              styles.inputTexto,
+              campoFocado === 'data' && styles.bordaFoco,
+              Boolean(errosCampo.data) && styles.campoErro,
+            ]}
           />
         ) : null}
         {errosCampo.data ? (
@@ -439,15 +463,23 @@ function FormularioLancamento({
         <TextInput
           accessibilityLabel="Descrição"
           placeholder="Ex.: Bandejão, ônibus, bolsa..."
-          placeholderTextColor="#9CA3AF"
+          placeholderTextColor={cores.textMuted}
+          selectionColor={cores.primary}
+          keyboardAppearance={escuro ? 'dark' : 'light'}
           value={descricao}
+          onFocus={() => setCampoFocado('descricao')}
+          onBlur={() => setCampoFocado((atual) => (atual === 'descricao' ? null : atual))}
           onChangeText={(texto) => {
             setDescricao(texto);
             limparErroCampo('descricao');
           }}
           editable={!envioBloqueado}
           returnKeyType="done"
-          style={[styles.inputTexto, Boolean(errosCampo.descricao) && styles.bordaErro]}
+          style={[
+            styles.inputTexto,
+            campoFocado === 'descricao' && styles.bordaFoco,
+            Boolean(errosCampo.descricao) && styles.campoErro,
+          ]}
         />
         {errosCampo.descricao ? (
           <Text testID="erro-descricao" style={styles.textoErro}>
@@ -488,6 +520,9 @@ function FormularioLancamento({
 }
 
 export default function LancamentoScreen() {
+  const { cores, escuro } = useTema();
+  const styles = useMemo(() => criarEstilos(cores), [cores]);
+
   const params = useLocalSearchParams<{ id?: string | string[] }>();
   const idBruto = Array.isArray(params.id) ? params.id[0] : params.id;
   const idEdicao =
@@ -526,7 +561,15 @@ export default function LancamentoScreen() {
       style={styles.flex}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      <Stack.Screen options={{ title: tituloTela }} />
+      <Stack.Screen
+        options={{
+          title: tituloTela,
+          headerStyle: { backgroundColor: cores.surface },
+          headerTintColor: cores.text,
+          headerTitleStyle: { color: cores.text },
+          contentStyle: { backgroundColor: cores.background },
+        }}
+      />
       <ScrollView
         style={styles.scroll}
         contentContainerStyle={styles.conteudo}
@@ -557,14 +600,14 @@ export default function LancamentoScreen() {
 
         {carregando ? (
           <View style={styles.bannerCarregando}>
-            <ActivityIndicator size="small" color="#2563EB" />
+            <ActivityIndicator size="small" color={cores.primary} />
             <Text style={styles.textoCarregando}>Carregando lançamentos...</Text>
           </View>
         ) : null}
 
         {naoEncontrado ? (
           <View style={styles.cardNaoEncontrado}>
-            <Ionicons name="alert-circle-outline" size={32} color="#6B7280" />
+            <Ionicons name="alert-circle-outline" size={32} color={cores.textSecondary} />
             <Text style={styles.tituloNaoEncontrado}>Lançamento não encontrado</Text>
             <Text style={styles.textoNaoEncontrado}>
               Este lançamento não está na lista carregada. Ele pode ter sido excluído.
@@ -584,6 +627,9 @@ export default function LancamentoScreen() {
             lancamentoInicial={lancamentoEdicao}
             carregando={carregando}
             erroLeitura={erroLeitura}
+            cores={cores}
+            escuro={escuro}
+            styles={styles}
             adicionar={adicionar}
             editar={editar}
             onCancelar={() => router.back()}
@@ -595,164 +641,190 @@ export default function LancamentoScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  flex: { flex: 1, backgroundColor: '#F8FAFC' },
-  scroll: { flex: 1 },
-  conteudo: { padding: 16, gap: 18, paddingBottom: 32 },
-  titulo: { fontSize: 22, fontWeight: '700', color: '#111827' },
-  secao: { gap: 8 },
-  linhaRotulo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  rotulo: { fontSize: 14, fontWeight: '600', color: '#374151' },
-  dicaData: { fontSize: 13, color: '#6B7280' },
-  contador: { fontSize: 12, color: '#6B7280' },
-  segmentado: {
-    flexDirection: 'row',
-    backgroundColor: '#E5E7EB',
-    borderRadius: 10,
-    padding: 3,
-    gap: 4,
-  },
-  opcaoSegmentada: {
-    flex: 1,
-    paddingVertical: 10,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  opcaoDespesaAtiva: { backgroundColor: '#FEF2F2', borderWidth: 1, borderColor: '#FCA5A5' },
-  opcaoReceitaAtiva: { backgroundColor: '#F0FDF4', borderWidth: 1, borderColor: '#86EFAC' },
-  textoSegmentado: { fontSize: 15, fontWeight: '600', color: '#4B5563' },
-  textoDespesaAtiva: { color: '#DC2626' },
-  textoReceitaAtiva: { color: '#16A34A' },
-  caixaValor: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#D1D5DB',
-    borderRadius: 10,
-    paddingHorizontal: 14,
-  },
-  prefixoMoeda: { fontSize: 20, fontWeight: '600', color: '#6B7280', marginRight: 8 },
-  inputValor: {
-    flex: 1,
-    fontSize: 24,
-    fontWeight: '700',
-    color: '#111827',
-    paddingVertical: 12,
-  },
-  gradeCategorias: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
-  chipCategoria: {
-    width: '48%',
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1.5,
-    borderColor: '#E5E7EB',
-    borderRadius: 10,
-    paddingVertical: 10,
-    paddingHorizontal: 10,
-  },
-  bolinhaCategoria: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  nomeCategoria: { flex: 1, fontSize: 14, fontWeight: '500', color: '#374151' },
-  nomeCategoriaAtiva: { fontWeight: '700', color: '#111827' },
-  linhaChipsData: { flexDirection: 'row', gap: 8 },
-  chipData: {
-    flex: 1,
-    alignItems: 'center',
-    paddingVertical: 10,
-    borderRadius: 10,
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1.5,
-    borderColor: '#E5E7EB',
-  },
-  chipDataAtivo: { backgroundColor: '#EFF6FF', borderColor: '#2563EB' },
-  textoChipData: { fontSize: 14, fontWeight: '600', color: '#4B5563' },
-  textoChipDataAtivo: { color: '#1D4ED8' },
-  inputTexto: {
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#D1D5DB',
-    borderRadius: 10,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    fontSize: 15,
-    color: '#111827',
-  },
-  bordaErro: { borderColor: '#DC2626' },
-  textoErro: { fontSize: 13, color: '#DC2626', fontWeight: '500' },
-  alertaErro: {
-    backgroundColor: '#FEF2F2',
-    borderWidth: 1,
-    borderColor: '#FCA5A5',
-    borderRadius: 10,
-    padding: 12,
-    gap: 6,
-  },
-  tituloAlertaErro: { fontSize: 14, fontWeight: '700', color: '#991B1B' },
-  textoAlertaErro: { fontSize: 13, color: '#B91C1C', lineHeight: 18 },
-  botaoTentarNovamente: {
-    alignSelf: 'flex-start',
-    backgroundColor: '#DC2626',
-    borderRadius: 8,
-    paddingVertical: 8,
-    paddingHorizontal: 14,
-    marginTop: 4,
-  },
-  textoBotaoTentarNovamente: { fontSize: 13, fontWeight: '600', color: '#FFFFFF' },
-  bannerCarregando: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    backgroundColor: '#EFF6FF',
-    borderRadius: 10,
-    padding: 12,
-  },
-  textoCarregando: { fontSize: 14, color: '#1E40AF', fontWeight: '500' },
-  cardNaoEncontrado: {
-    alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
-    borderRadius: 12,
-    padding: 20,
-    gap: 10,
-  },
-  tituloNaoEncontrado: { fontSize: 17, fontWeight: '700', color: '#111827' },
-  textoNaoEncontrado: { fontSize: 14, color: '#6B7280', textAlign: 'center', lineHeight: 20 },
-  acoes: { gap: 10, marginTop: 4 },
-  botaoPrimario: {
-    backgroundColor: '#2563EB',
-    borderRadius: 10,
-    paddingVertical: 14,
-    paddingHorizontal: 20,
-    alignItems: 'center',
-    width: '100%',
-  },
-  botaoDesabilitado: { opacity: 0.5 },
-  textoBotaoPrimario: { fontSize: 16, fontWeight: '700', color: '#FFFFFF' },
-  botaoSecundario: {
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#D1D5DB',
-    borderRadius: 10,
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    alignItems: 'center',
-  },
-  textoBotaoSecundario: { fontSize: 15, fontWeight: '600', color: '#374151' },
-});
+function criarEstilos(cores: CoresTema) {
+  return StyleSheet.create({
+    flex: { flex: 1, backgroundColor: cores.background },
+    scroll: { flex: 1 },
+    conteudo: { padding: 16, gap: 18, paddingBottom: 32 },
+    titulo: { fontSize: 22, fontWeight: '700', color: cores.text },
+    secao: { gap: 8 },
+    linhaRotulo: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+    },
+    rotulo: { fontSize: 14, fontWeight: '600', color: cores.text },
+    dicaData: { fontSize: 13, color: cores.textSecondary },
+    contador: { fontSize: 12, color: cores.textSecondary },
+    segmentado: {
+      flexDirection: 'row',
+      backgroundColor: cores.surfaceAlt,
+      borderWidth: 1,
+      borderColor: cores.border,
+      borderRadius: 10,
+      padding: 3,
+      gap: 4,
+    },
+    opcaoSegmentada: {
+      flex: 1,
+      paddingVertical: 10,
+      borderRadius: 8,
+      alignItems: 'center',
+    },
+    opcaoSegmentadaAtiva: {
+      backgroundColor: cores.primaryBg,
+      borderWidth: 1,
+      borderColor: cores.primary,
+    },
+    textoSegmentado: { fontSize: 15, fontWeight: '600', color: cores.textSecondary },
+    textoSegmentadoAtivo: { color: cores.primary },
+    caixaValor: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: cores.surfaceAlt,
+      borderWidth: 1,
+      borderColor: cores.border,
+      borderRadius: 10,
+      paddingHorizontal: 14,
+    },
+    prefixoMoeda: { fontSize: 20, fontWeight: '600', color: cores.textSecondary, marginRight: 8 },
+    inputValor: {
+      flex: 1,
+      fontSize: 24,
+      fontWeight: '700',
+      color: cores.text,
+      paddingVertical: 12,
+    },
+    gradeCategorias: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 8,
+    },
+    chipCategoria: {
+      width: '48%',
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+      backgroundColor: cores.surface,
+      borderWidth: 1.5,
+      borderColor: cores.border,
+      borderRadius: 10,
+      paddingVertical: 10,
+      paddingHorizontal: 10,
+    },
+    chipCategoriaAtivo: {
+      backgroundColor: cores.primaryBg,
+      borderColor: cores.primary,
+    },
+    bolinhaCategoria: {
+      width: 28,
+      height: 28,
+      borderRadius: 14,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    nomeCategoria: { flex: 1, fontSize: 14, fontWeight: '500', color: cores.text },
+    nomeCategoriaAtiva: { fontWeight: '700', color: cores.primary },
+    linhaChipsData: { flexDirection: 'row', gap: 8 },
+    chipData: {
+      flex: 1,
+      alignItems: 'center',
+      paddingVertical: 10,
+      borderRadius: 10,
+      backgroundColor: cores.surface,
+      borderWidth: 1.5,
+      borderColor: cores.border,
+    },
+    chipDataAtivo: { backgroundColor: cores.primaryBg, borderColor: cores.primary },
+    textoChipData: { fontSize: 14, fontWeight: '600', color: cores.textSecondary },
+    textoChipDataAtivo: { color: cores.primary },
+    inputTexto: {
+      backgroundColor: cores.surfaceAlt,
+      borderWidth: 1,
+      borderColor: cores.border,
+      borderRadius: 10,
+      paddingHorizontal: 14,
+      paddingVertical: 12,
+      fontSize: 15,
+      color: cores.text,
+    },
+    bordaFoco: { borderColor: cores.primary },
+    campoErro: { borderColor: cores.danger, backgroundColor: cores.dangerBg },
+    textoErro: {
+      fontSize: 13,
+      color: cores.danger,
+      fontWeight: '500',
+      backgroundColor: cores.dangerBg,
+      borderWidth: 1,
+      borderColor: cores.dangerBorder,
+      borderRadius: 8,
+      paddingHorizontal: 10,
+      paddingVertical: 6,
+    },
+    alertaErro: {
+      backgroundColor: cores.dangerBg,
+      borderWidth: 1,
+      borderColor: cores.dangerBorder,
+      borderRadius: 10,
+      padding: 12,
+      gap: 6,
+    },
+    tituloAlertaErro: { fontSize: 14, fontWeight: '700', color: cores.danger },
+    textoAlertaErro: { fontSize: 13, color: cores.danger, lineHeight: 18 },
+    botaoTentarNovamente: {
+      alignSelf: 'flex-start',
+      backgroundColor: cores.danger,
+      borderRadius: 8,
+      paddingVertical: 8,
+      paddingHorizontal: 14,
+      marginTop: 4,
+    },
+    textoBotaoTentarNovamente: { fontSize: 13, fontWeight: '600', color: cores.onPrimary },
+    bannerCarregando: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 10,
+      backgroundColor: cores.primaryBg,
+      borderRadius: 10,
+      padding: 12,
+    },
+    textoCarregando: { fontSize: 14, color: cores.primary, fontWeight: '500' },
+    cardNaoEncontrado: {
+      alignItems: 'center',
+      backgroundColor: cores.surface,
+      borderWidth: 1,
+      borderColor: cores.border,
+      borderRadius: 12,
+      padding: 20,
+      gap: 10,
+    },
+    tituloNaoEncontrado: { fontSize: 17, fontWeight: '700', color: cores.text },
+    textoNaoEncontrado: {
+      fontSize: 14,
+      color: cores.textSecondary,
+      textAlign: 'center',
+      lineHeight: 20,
+    },
+    acoes: { gap: 10, marginTop: 4 },
+    botaoPrimario: {
+      backgroundColor: cores.primary,
+      borderRadius: 10,
+      paddingVertical: 14,
+      paddingHorizontal: 20,
+      alignItems: 'center',
+      width: '100%',
+    },
+    botaoDesabilitado: { opacity: 0.55 },
+    textoBotaoPrimario: { fontSize: 16, fontWeight: '700', color: cores.onPrimary },
+    botaoSecundario: {
+      backgroundColor: cores.surface,
+      borderWidth: 1,
+      borderColor: cores.border,
+      borderRadius: 10,
+      paddingVertical: 12,
+      paddingHorizontal: 20,
+      alignItems: 'center',
+    },
+    textoBotaoSecundario: { fontSize: 15, fontWeight: '600', color: cores.text },
+  });
+}
