@@ -9,7 +9,7 @@ Escopo completo do MVP em [`docs/spec.md`](docs/spec.md).
 ## Pré-requisitos
 
 - **Node.js LTS (20+) e npm** instalados no computador (usados apenas pelas ferramentas de desenvolvimento como Expo CLI, Metro, TypeScript, ESLint e Jest; o aplicativo no celular não executa Node).
-- 
+
 - Como abrir o Bolso:
   - Aplicativo **Expo Go** instalado no smartphone ([Android](https://play.google.com/store/apps/details?id=host.exp.exponent) / [iOS](https://apps.apple.com/app/expo-go/id982107779)), com versão compatível com o SDK do projeto.
   - **Pelo computador:** emulador Android (Android Studio) / Simulador iOS (Xcode, só no macOS).
