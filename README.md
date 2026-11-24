@@ -34,7 +34,7 @@ Depois:
 > não está na mesma rede), use `npm run start:tunnel` e escaneie o QR code
 > com a câmera do iPhone. O túnel funciona mesmo em redes diferentes.
 >
-> Se o Expo Go reclamar de versão incompatível, atualize o Expo Go na App Store.
+> Se o Expo Go reclamar de versão incompatível, atualize o Expo Go na App Store/Play Store.
 
 Não há variáveis de ambiente necessárias. Veja [`.env.example`](.env.example).
 
