@@ -53,22 +53,22 @@ Não há variáveis de ambiente necessárias. Veja [`.env.example`](.env.example
 
 ## Bibliotecas extras
 
-Além do núcleo React Native, Expo, TypeScript e Expo Router, o projeto utiliza[cite: 9, 10, 16, 21]:
+Além do núcleo React Native, Expo, TypeScript e Expo Router, o projeto utiliza:
 
-- **`@react-native-async-storage/async-storage`**: persistência local chave-valor em JSON no aparelho para os lançamentos (`@bolso/lancamentos`), backup de segurança (`@bolso/lancamentos:backup`) e preferência de tema (`@bolso/tema`)[cite: 9, 10, 16].
-- **`@expo/vector-icons` (`Ionicons`)**: ícones das 8 categorias fixas, barra de navegação inferior, alternância de tema e botões de ação[cite: 10, 16].
-- **`react-native-safe-area-context`**: ajuste automático das margens seguras da tela (notch, barra de status e gestos do sistema)[cite: 16].
-- **`react-native-screens`**: otimização nativa das telas e transições de pilha/abas no Expo Router[cite: 16].
-- **`react-native-web`**: suporte à compilação e execução da aplicação como SPA estática em navegadores web[cite: 16].
-- **`jest`, `jest-expo` e `@testing-library/react-native`**: suíte de testes automatizados (105 testes em 10 suítes) cobrindo utilitários, persistência, contextos e telas[cite: 10, 16].
-- **`eslint` (`eslint-config-expo`)**: análise estática e padronização da qualidade do código TypeScript/React Native[cite: 16, 19].
+- **`@react-native-async-storage/async-storage`**: persistência local chave-valor em JSON no aparelho para os lançamentos (`@bolso/lancamentos`), backup de segurança (`@bolso/lancamentos:backup`) e preferência de tema (`@bolso/tema`).
+- **`@expo/vector-icons` (`Ionicons`)**: ícones das 8 categorias fixas, barra de navegação inferior, alternância de tema e botões de ação.
+- **`react-native-safe-area-context`**: ajuste automático das margens seguras da tela (notch, barra de status e gestos do sistema).
+- **`react-native-screens`**: otimização nativa das telas e transições de pilha/abas no Expo Router.
+- **`react-native-web`**: suporte à compilação e execução da aplicação como SPA estática em navegadores web.
+- **`jest`, `jest-expo` e `@testing-library/react-native`**: suíte de testes automatizados (105 testes em 10 suítes) cobrindo utilitários, persistência, contextos e telas.
+- **`eslint` (`eslint-config-expo`)**: análise estática e padronização da qualidade do código TypeScript/React Native.
 
 ## Arquitetura e Chamadas de API (100% Offline)
 
-Conforme definido na especificação do MVP ([`docs/spec.md`](docs/spec.md)), o **Bolso** foi projetado como uma aplicação **100% offline** (*client-side standalone*), sem backend remoto e **sem chamadas a APIs externas**[cite: 1, 8, 15, 21].
+Conforme definido na especificação do MVP ([`docs/spec.md`](docs/spec.md)), o **Bolso** foi projetado como uma aplicação **100% offline** (*client-side standalone*), sem backend remoto e **sem chamadas a APIs externas**.
 
-- **Camada de dados local:** toda a leitura, gravação e sincronização ocorre no próprio aparelho por meio de `src/storage/lancamentosStorage.ts` e `src/context/LancamentosContext.tsx`[cite: 1, 9, 21].
-- **Estados de carregamento e erro:** o `LancamentosContext` gerencia o estado de carregamento inicial (`carregando`), mensagens de erro e fila serializada de escrita com reversão automática (*rollback*) caso alguma operação local falhe — garantindo resposta instantânea (< 500 ms) e privacidade total sem depender de internet[cite: 9, 15, 21].
+- **Camada de dados local:** toda a leitura, gravação e sincronização ocorre no próprio aparelho por meio de `src/storage/lancamentosStorage.ts` e `src/context/LancamentosContext.tsx`.
+- **Estados de carregamento e erro:** o `LancamentosContext` gerencia o estado de carregamento inicial (`carregando`), mensagens de erro e fila serializada de escrita com reversão automática (*rollback*) caso alguma operação local falhe — garantindo resposta instantânea (< 500 ms) e privacidade total sem depender de internet.
 
 ## Estrutura
 
