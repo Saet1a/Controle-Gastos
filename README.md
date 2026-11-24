@@ -51,6 +51,25 @@ Não há variáveis de ambiente necessárias. Veja [`.env.example`](.env.example
 | `npm run test:watch` | Testes em modo watch                       |
 | `npm run check`      | lint + typecheck + test (rode antes de commitar) |
 
+## Bibliotecas extras
+
+Além do núcleo React Native, Expo, TypeScript e Expo Router, o projeto utiliza[cite: 9, 10, 16, 21]:
+
+- **`@react-native-async-storage/async-storage`**: persistência local chave-valor em JSON no aparelho para os lançamentos (`@bolso/lancamentos`), backup de segurança (`@bolso/lancamentos:backup`) e preferência de tema (`@bolso/tema`)[cite: 9, 10, 16].
+- **`@expo/vector-icons` (`Ionicons`)**: ícones das 8 categorias fixas, barra de navegação inferior, alternância de tema e botões de ação[cite: 10, 16].
+- **`react-native-safe-area-context`**: ajuste automático das margens seguras da tela (notch, barra de status e gestos do sistema)[cite: 16].
+- **`react-native-screens`**: otimização nativa das telas e transições de pilha/abas no Expo Router[cite: 16].
+- **`react-native-web`**: suporte à compilação e execução da aplicação como SPA estática em navegadores web[cite: 16].
+- **`jest`, `jest-expo` e `@testing-library/react-native`**: suíte de testes automatizados (105 testes em 10 suítes) cobrindo utilitários, persistência, contextos e telas[cite: 10, 16].
+- **`eslint` (`eslint-config-expo`)**: análise estática e padronização da qualidade do código TypeScript/React Native[cite: 16, 19].
+
+## Arquitetura e Chamadas de API (100% Offline)
+
+Conforme definido na especificação do MVP ([`docs/spec.md`](docs/spec.md)), o **Bolso** foi projetado como uma aplicação **100% offline** (*client-side standalone*), sem backend remoto e **sem chamadas a APIs externas**[cite: 1, 8, 15, 21].
+
+- **Camada de dados local:** toda a leitura, gravação e sincronização ocorre no próprio aparelho por meio de `src/storage/lancamentosStorage.ts` e `src/context/LancamentosContext.tsx`[cite: 1, 9, 21].
+- **Estados de carregamento e erro:** o `LancamentosContext` gerencia o estado de carregamento inicial (`carregando`), mensagens de erro e fila serializada de escrita com reversão automática (*rollback*) caso alguma operação local falhe — garantindo resposta instantânea (< 500 ms) e privacidade total sem depender de internet[cite: 9, 15, 21].
+
 ## Estrutura
 
 ```
@@ -71,10 +90,11 @@ docs/spec.md                especificação do MVP
 
 Import com alias: `@/` aponta pra `src/` (ex.: `import { useLancamentos } from '@/context/LancamentosContext'`).
 
-## Dados
+## Dados e Validações
 
-- Salvos em JSON no AsyncStorage, chave `@bolso/lancamentos`.
-- Valores guardados em **centavos** (inteiro) pra evitar erro de ponto flutuante.
-- Carregados ao abrir o app e salvos a cada alteração.
-- Pra zerar: limpe os dados do app (no Expo Go: Configurações do sistema → Apps → Expo Go →
-  Limpar dados) ou desinstale.
+- **Persistência local em JSON (`AsyncStorage`):** os lançamentos são armazenados na chave `@bolso/lancamentos` em `src/storage/lancamentosStorage.ts`, carregados ao abrir o app e regravados a cada operação CRUD (adicionar, editar ou excluir). Os dados permanecem salvos mesmo fechando e reabrindo o aplicativo.
+- **Valores em centavos inteiros:** todos os valores monetários são convertidos e guardados em **centavos** (`valorCentavos`, inteiro positivo) para evitar erros de arredondamento de ponto flutuante.
+- **Validação estrita de entrada (`src/utils/validacao.ts`):** antes de salvar qualquer lançamento, o sistema valida o tipo (`despesa` ou `receita`), valor monetário positivo, existência da categoria no catálogo fixo, data válida de calendário no padrão ISO (`AAAA-MM-DD`) e limite de até 120 caracteres para a descrição opcional.
+- **Integridade, backup e proteção contra perda de dados:** ao carregar os registros do `AsyncStorage`, o sistema valida o esquema e os identificadores; se detectar JSON corrompido ou registros inválidos/duplicados, salva automaticamente uma cópia do conteúdo bruto original na chave `@bolso/lancamentos:backup`. Em caso de erro de leitura (`erro_leitura`), novas gravações são bloqueadas preventivamente para evitar sobrescrever o histórico existente.
+- **Tema e categorias fixas:** a preferência manual de tema claro/escuro fica salva em `@bolso/tema` (acompanhando o tema do sistema operacional quando não definida), enquanto as 8 categorias (*Alimentação, Transporte, Moradia, Saúde, Educação, Lazer, Salário e Outros*) são imutáveis (`Object.freeze`) no código em `src/constants/categorias.ts`.
+- **Como zerar os dados:** limpe os dados do app (no Expo Go: *Configurações do sistema → Apps → Expo Go → Limpar dados*) ou desinstale o aplicativo.
