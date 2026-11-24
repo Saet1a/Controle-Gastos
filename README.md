@@ -1,20 +1,21 @@
 # Bolso
 
-App de controle de gastos pra universitário: lança despesa/receita em até 3 toques e vê
-quanto ainda pode gastar no mês. Tudo fica salvo **só no aparelho**, sem conta, sem
-internet, sem banco.
+Aplicativo móvel de controle de gastos pessoais para universitários, estagiários e quem busca acompanhar suas finanças sem complicações: permite registrar despesas ou receitas, visualizar o saldo mensal, consultar gastos por categoria e navegar pelo histórico com filtros. Toda a aplicação funciona de forma **100% offline**, sem backend e sem chamadas a API's externas, mantendo os dados salvos apenas no próprio aparelho.
 
 Escopo completo do MVP em [`docs/spec.md`](docs/spec.md).
 
 **Stack:** React Native + Expo + TypeScript · Expo Router · Context API · AsyncStorage
+**Link do Aplicativo:**
 
 ## Pré-requisitos
 
-- **Node.js LTS (20+) e npm.** Usados só pelas ferramentas de desenvolvimento (Expo CLI,
-  Metro, TypeScript, ESLint, Jest). O app no celular não roda Node.
-- Um jeito de abrir o app:
-  - **Expo Go** no celular ([Android](https://play.google.com/store/apps/details?id=host.exp.exponent) / [iOS](https://apps.apple.com/app/expo-go/id982107779)), na mesma rede Wi-Fi do computador; **ou**
+- **Node.js LTS (20+) e npm** instalados no computador (usados apenas pelas ferramentas de desenvolvimento como Expo CLI, Metro, TypeScript, ESLint e Jest; o aplicativo no celular não executa Node).
+- Como abrir o Bolso:
+  - Aplicativo **Expo Go** instalado no smartphone ([Android](https://play.google.com/store/apps/details?id=host.exp.exponent) / [iOS](https://apps.apple.com/app/expo-go/id982107779)), com versão compatível com o SDK do projeto. **ou**
   - Emulador Android (Android Studio) / Simulador iOS (Xcode, só no macOS).
+  - Adicione o link: exps://2q3vr2s-anonymous-8082.exp.direct em "Enter URL" e clique em "Connect".
+    
+  - **Conexão de rede:** preferencialmente o celular e o computador na **mesma rede Wi-Fi**. Caso a rede bloqueie a conexão (como ocorre em algumas redes institucionais/universitárias) ou o iPhone esteja em outra rede, o modo túnel (`npm run start:tunnel`) permite conectar mesmo em redes diferentes.
 
 ## Rodando local
 
