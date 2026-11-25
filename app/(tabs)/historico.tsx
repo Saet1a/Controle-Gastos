@@ -3,8 +3,9 @@ import { useRouter } from 'expo-router';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
-  Alert,
   FlatList,
+  Modal,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -56,6 +57,7 @@ export default function HistoricoScreen() {
   const [categoriaSelecionada, setCategoriaSelecionada] = useState<CategoriaId | null>(null);
   const [erroExclusao, setErroExclusao] = useState<string | null>(null);
   const [excluindoIds, setExcluindoIds] = useState<ReadonlySet<string>>(() => new Set());
+  const [itemParaExcluir, setItemParaExcluir] = useState<Lancamento | null>(null);
 
   const excluindoIdsRef = useRef<Set<string>>(new Set());
   const montadoRef = useRef(true);
@@ -110,6 +112,7 @@ export default function HistoricoScreen() {
 
   function handleRecarregar() {
     setErroExclusao(null);
+    setItemParaExcluir(null);
     void recarregar();
   }
 
@@ -141,21 +144,23 @@ export default function HistoricoScreen() {
 
   function solicitarExclusao(item: Lancamento) {
     if (carregando || erroLeitura || excluindoIdsRef.current.has(item.id)) return;
-
-    const titulo = item.descricao.trim() || getCategoria(item.categoriaId).nome;
-    Alert.alert(
-      'Excluir lançamento',
-      `Deseja excluir "${titulo}" (${formatarValorComSinal(item)})? Esta ação não pode ser desfeita.`,
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        {
-          text: 'Excluir',
-          style: 'destructive',
-          onPress: () => void executarExclusao(item.id),
-        },
-      ],
-    );
+    setItemParaExcluir(item);
   }
+
+  function cancelarExclusao() {
+    setItemParaExcluir(null);
+  }
+
+  function confirmarExclusao() {
+    if (!itemParaExcluir) return;
+    const id = itemParaExcluir.id;
+    setItemParaExcluir(null);
+    void executarExclusao(id);
+  }
+
+  const tituloItemParaExcluir = itemParaExcluir
+    ? itemParaExcluir.descricao.trim() || getCategoria(itemParaExcluir.categoriaId).nome
+    : '';
 
   const renderItem: ListRenderItem<Lancamento> = ({ item }) => {
     const categoria = getCategoria(item.categoriaId);
@@ -408,6 +413,62 @@ export default function HistoricoScreen() {
           />
         </View>
       )}
+
+      <Modal
+        visible={itemParaExcluir !== null}
+        transparent
+        animationType={Platform.OS === 'web' ? 'none' : 'fade'}
+        statusBarTranslucent
+        onRequestClose={cancelarExclusao}
+      >
+        <View style={styles.modalOverlay}>
+          <Pressable
+            testID="modal-excluir-backdrop"
+            accessible={false}
+            tabIndex={-1}
+            onPress={cancelarExclusao}
+            style={StyleSheet.absoluteFill}
+          />
+          {itemParaExcluir ? (
+            <View
+              testID="modal-confirmar-exclusao"
+              accessibilityViewIsModal
+              style={styles.modalCard}
+            >
+              <Text style={styles.modalTitulo}>Excluir lançamento</Text>
+              <Text testID="modal-excluir-mensagem" style={styles.modalMensagem}>
+                {`Deseja excluir "${tituloItemParaExcluir}" (${formatarValorComSinal(itemParaExcluir)})? Esta ação não pode ser desfeita.`}
+              </Text>
+              <View style={styles.modalAcoes}>
+                <Pressable
+                  testID="modal-excluir-cancelar"
+                  accessibilityRole="button"
+                  accessibilityLabel="Cancelar"
+                  onPress={cancelarExclusao}
+                  style={({ pressed }) => [
+                    styles.modalBotaoCancelar,
+                    pressed && styles.modalBotaoPressionado,
+                  ]}
+                >
+                  <Text style={styles.modalTextoCancelar}>Cancelar</Text>
+                </Pressable>
+                <Pressable
+                  testID="modal-excluir-confirmar"
+                  accessibilityRole="button"
+                  accessibilityLabel="Excluir"
+                  onPress={confirmarExclusao}
+                  style={({ pressed }) => [
+                    styles.modalBotaoExcluir,
+                    pressed && styles.modalBotaoPressionado,
+                  ]}
+                >
+                  <Text style={styles.modalTextoExcluir}>Excluir</Text>
+                </Pressable>
+              </View>
+            </View>
+          ) : null}
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -680,6 +741,77 @@ function criarEstilos(cores: CoresTema) {
       fontSize: 13,
       fontWeight: '700',
       color: cores.primary,
+    },
+    modalOverlay: {
+      flex: 1,
+      backgroundColor: cores.overlay,
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: 24,
+    },
+    modalCard: {
+      width: '100%',
+      maxWidth: 360,
+      backgroundColor: cores.surface,
+      borderWidth: 1,
+      borderColor: cores.border,
+      borderRadius: 16,
+      padding: 20,
+      gap: 12,
+      elevation: 6,
+      shadowColor: cores.overlay,
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.25,
+      shadowRadius: 12,
+    },
+    modalTitulo: {
+      fontSize: 18,
+      fontWeight: '700',
+      color: cores.text,
+    },
+    modalMensagem: {
+      fontSize: 14,
+      color: cores.textSecondary,
+      lineHeight: 20,
+    },
+    modalAcoes: {
+      flexDirection: 'row',
+      justifyContent: 'flex-end',
+      gap: 10,
+      marginTop: 6,
+    },
+    modalBotaoCancelar: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingVertical: 11,
+      paddingHorizontal: 14,
+      borderRadius: 10,
+      backgroundColor: cores.surfaceAlt,
+      borderWidth: 1,
+      borderColor: cores.border,
+    },
+    modalTextoCancelar: {
+      fontSize: 14,
+      fontWeight: '600',
+      color: cores.text,
+    },
+    modalBotaoExcluir: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingVertical: 11,
+      paddingHorizontal: 14,
+      borderRadius: 10,
+      backgroundColor: cores.danger,
+    },
+    modalTextoExcluir: {
+      fontSize: 14,
+      fontWeight: '700',
+      color: cores.onPrimary,
+    },
+    modalBotaoPressionado: {
+      opacity: 0.85,
     },
   });
 }

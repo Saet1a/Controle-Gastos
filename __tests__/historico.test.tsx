@@ -1,7 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react-native';
 import { useEffect } from 'react';
-import { Alert, type AlertButton } from 'react-native';
 
 import { CATEGORIAS } from '@/constants/categorias';
 import { LancamentosProvider, useLancamentos } from '@/context/LancamentosContext';
@@ -78,12 +77,9 @@ async function lerSalvos(): Promise<Lancamento[]> {
   return JSON.parse((await AsyncStorage.getItem(STORAGE_KEY)) ?? '[]');
 }
 
-let alertSpy: jest.SpyInstance;
-
 beforeEach(async () => {
   await AsyncStorage.clear();
   jest.clearAllMocks();
-  alertSpy = jest.spyOn(Alert, 'alert').mockImplementation(() => {});
 });
 
 afterEach(() => {
@@ -173,7 +169,7 @@ describe('HistoricoScreen', () => {
     await fireEvent.press(screen.getByTestId('editar-lancamento-desp-1'));
     expect(mockPush).toHaveBeenCalledTimes(1);
     expect(mockPush).toHaveBeenCalledWith('/lancamento?id=desp-1');
-    expect(alertSpy).not.toHaveBeenCalled();
+    expect(screen.queryByTestId('modal-confirmar-exclusao')).toBeNull();
   });
 
   it('filtra por categoria em seleção única e mantém a categoria ao trocar de mês', async () => {
@@ -291,36 +287,31 @@ describe('HistoricoScreen', () => {
     await fireEvent.press(screen.getByTestId('excluir-lancamento-desp-1'));
 
     expect(mockPush).not.toHaveBeenCalled();
-    expect(alertSpy).toHaveBeenCalledTimes(1);
-    const [tituloAlert, mensagemAlert, botoes] = alertSpy.mock.calls[0] as [
-      string,
-      string,
-      AlertButton[],
-    ];
-    expect(tituloAlert).toBe('Excluir lançamento');
-    expect(mensagemAlert).toContain('Mercado');
-    expect(mensagemAlert).toContain('- R$ 25,00');
+    expect(screen.getByTestId('modal-confirmar-exclusao')).toBeTruthy();
+    expect(screen.getByText('Excluir lançamento')).toBeTruthy();
+    expect(screen.getByTestId('modal-excluir-mensagem')).toHaveTextContent(/Mercado/);
+    expect(screen.getByTestId('modal-excluir-mensagem')).toHaveTextContent(/- R\$ 25,00/);
 
-    const cancelar = botoes.find((b) => b.text === 'Cancelar');
-    expect(cancelar).toBeTruthy();
-    cancelar?.onPress?.();
+    await fireEvent.press(screen.getByTestId('modal-excluir-cancelar'));
 
+    expect(screen.queryByTestId('modal-confirmar-exclusao')).toBeNull();
     expect(screen.getByTestId('item-lancamento-desp-1')).toBeTruthy();
     expect(resumoDoMes(contexto.lancamentos, mesAtual).saldoCentavos).toBe(147500);
     expect(await lerSalvos()).toHaveLength(2);
 
-    alertSpy.mockClear();
     await fireEvent.press(screen.getByTestId('excluir-lancamento-desp-1'));
+    expect(screen.getByTestId('modal-confirmar-exclusao')).toBeTruthy();
 
-    const botoesConfirmacao = alertSpy.mock.calls[0][2] as AlertButton[];
-    const confirmar = botoesConfirmacao.find((b) => b.text === 'Excluir');
-    expect(confirmar?.style).toBe('destructive');
+    await fireEvent.press(
+      screen.getByTestId('modal-excluir-backdrop', { includeHiddenElements: true }),
+    );
+    expect(screen.queryByTestId('modal-confirmar-exclusao')).toBeNull();
+    expect(screen.getByTestId('item-lancamento-desp-1')).toBeTruthy();
 
-    await act(async () => {
-      confirmar?.onPress?.();
-      await Promise.resolve();
-    });
+    await fireEvent.press(screen.getByTestId('excluir-lancamento-desp-1'));
+    await fireEvent.press(screen.getByTestId('modal-excluir-confirmar'));
 
+    expect(screen.queryByTestId('modal-confirmar-exclusao')).toBeNull();
     await waitFor(() => expect(screen.queryByTestId('item-lancamento-desp-1')).toBeNull());
 
     expect(screen.getByTestId('contador-lancamentos')).toHaveTextContent('1 lançamento');
@@ -414,14 +405,7 @@ describe('HistoricoScreen', () => {
 
     await fireEvent.press(screen.getByTestId('filtro-categoria-alimentacao'));
     await fireEvent.press(screen.getByTestId('excluir-lancamento-alim-1'));
-
-    const confirmarAlim = (alertSpy.mock.calls[0][2] as AlertButton[]).find(
-      (b) => b.text === 'Excluir',
-    );
-    await act(async () => {
-      confirmarAlim?.onPress?.();
-      await Promise.resolve();
-    });
+    await fireEvent.press(screen.getByTestId('modal-excluir-confirmar'));
 
     await waitFor(() => expect(screen.getByTestId('estado-vazio-categoria')).toBeTruthy());
     expect(screen.getByTestId('filtro-categoria-alimentacao')).toHaveProp('accessibilityState', {
@@ -432,15 +416,8 @@ describe('HistoricoScreen', () => {
     await fireEvent.press(screen.getByTestId('botao-limpar-filtro'));
     expect(screen.getByTestId('item-lancamento-transp-1')).toBeTruthy();
 
-    alertSpy.mockClear();
     await fireEvent.press(screen.getByTestId('excluir-lancamento-transp-1'));
-    const confirmarTransp = (alertSpy.mock.calls[0][2] as AlertButton[]).find(
-      (b) => b.text === 'Excluir',
-    );
-    await act(async () => {
-      confirmarTransp?.onPress?.();
-      await Promise.resolve();
-    });
+    await fireEvent.press(screen.getByTestId('modal-excluir-confirmar'));
 
     await waitFor(() => expect(screen.getByTestId('estado-vazio-mes')).toBeTruthy());
     expect(await lerSalvos()).toEqual([]);
@@ -616,14 +593,7 @@ describe('HistoricoScreen', () => {
     (AsyncStorage.setItem as jest.Mock).mockRejectedValueOnce(new Error('Disk full'));
 
     await fireEvent.press(screen.getByTestId('excluir-lancamento-valido-1'));
-    const confirmar = (alertSpy.mock.calls[0][2] as AlertButton[]).find(
-      (b) => b.text === 'Excluir',
-    );
-
-    await act(async () => {
-      confirmar?.onPress?.();
-      await Promise.resolve();
-    });
+    await fireEvent.press(screen.getByTestId('modal-excluir-confirmar'));
 
     await waitFor(() => expect(screen.getByTestId('erro-exclusao')).toBeTruthy());
 
