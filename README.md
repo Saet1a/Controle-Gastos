@@ -11,6 +11,7 @@ Escopo completo do MVP em [`docs/spec.md`](docs/spec.md).
 - **Node.js LTS (20+) e npm** instalados no computador (usados apenas pelas ferramentas de desenvolvimento como Expo CLI, Metro, TypeScript, ESLint e Jest; o aplicativo no celular não executa Node).
 
 - Como abrir o Bolso:
+  - Netlify: https://creative-nougat-bf1603.netlify.app   
   - Aplicativo **Expo Go** instalado no smartphone ([Android](https://play.google.com/store/apps/details?id=host.exp.exponent) / [iOS](https://apps.apple.com/app/expo-go/id982107779)), com versão compatível com o SDK do projeto.
   - **Pelo computador:** emulador Android (Android Studio) / Simulador iOS (Xcode, só no macOS).
   - Adicione o link: **exps://2q3vr2s-anonymous-8082.exp.direct** em "Enter URL" e clique em "Connect".
