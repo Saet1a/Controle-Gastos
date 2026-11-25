@@ -14,7 +14,7 @@ Escopo completo do MVP em [`docs/spec.md`](docs/spec.md).
   - Netlify: https://creative-nougat-bf1603.netlify.app   
   - Aplicativo **Expo Go** instalado no smartphone ([Android](https://play.google.com/store/apps/details?id=host.exp.exponent) / [iOS](https://apps.apple.com/app/expo-go/id982107779)), com versão compatível com o SDK do projeto.
   - **Pelo computador:** emulador Android (Android Studio) / Simulador iOS (Xcode, só no macOS).
-  - Adicione o link: **exps://2q3vr2s-anonymous-8082.exp.direct** em "Enter URL" e clique em "Connect".
+  - Adicione o link: **exp://192.168.1.17:8081** em "Enter URL" e clique em "Connect".
     
   - **Conexão de rede:** preferencialmente o celular e o computador na **mesma rede Wi-Fi**. Caso a rede bloqueie a conexão (como ocorre em algumas redes institucionais/universitárias) ou o iPhone esteja em outra rede, o modo túnel (`npm run start:tunnel`) permite conectar mesmo em redes diferentes.
 
